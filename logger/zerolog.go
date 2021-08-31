@@ -37,3 +37,20 @@ func (l zeroLevelLogger) Errorf(fn, tid string, format string, args ...interface
 func (l zeroLevelLogger) Print(level LogLevel, fn, tid string, msg string) {
 	l.lgr.Log().Str("level", getZeroLevel(level).String()).Str("function", fn).Str("tid", tid).Msg(msg)
 }
+
+func getZeroLevel(level LogLevel) zerolog.Level {
+	switch level {
+	case Info:
+		return zerolog.InfoLevel
+	case Warn:
+		return zerolog.WarnLevel
+	case Debug:
+		return zerolog.DebugLevel
+	case Error:
+		return zerolog.ErrorLevel
+	case Fatal:
+		return zerolog.FatalLevel
+	default:
+		return zerolog.InfoLevel
+	}
+}

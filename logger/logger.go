@@ -1,5 +1,15 @@
 package logger
 
+type LogLevel string
+
+const (
+	Info  LogLevel = "Info"
+	Warn  LogLevel = "Warn"
+	Debug LogLevel = "Debug"
+	Error LogLevel = "Error"
+	Fatal LogLevel = "Fatal"
+)
+
 type StructLogger interface {
 	Println(fn, tid string, msg string)
 	Printf(fn, tid string, format string, args ...interface{})

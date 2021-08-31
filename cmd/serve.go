@@ -3,6 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"go-template/api"
+	"go-template/config"
+	"go-template/infra/db"
+	"go-template/logger"
+	"go-template/repo"
+	"go-template/service"
 	"log"
 	"net/http"
 	"os"
@@ -11,11 +17,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
-
-	"go-template/api"
-	"go-template/config"
 )
 
 var cfgFile string
@@ -39,11 +43,30 @@ func serve(cmd *cobra.Command, args []string) error {
 
 	appConfig := config.GetApp()
 
-	return startApiServer(appConfig)
+	log := logger.DefaultOutStructLogger
+
+	DB, err := db.NewDB()
+	if err != nil {
+		return err
+	}
+
+	err = db.AutoMigrate(DB)
+	if err != nil {
+		return err
+	}
+
+	bookRepo := repo.NewBookRepo(DB, log)
+
+	bookService := service.NewBookService(bookRepo, log)
+
+	bookCtrl := api.NewBookController(bookService, log)
+
+	router := api.NewRouter(bookCtrl)
+
+	return startApiServer(appConfig, router)
 }
 
-func startApiServer(appConfig *config.Application) error {
-	router := api.NewRouter()
+func startApiServer(appConfig *config.Application, router chi.Router) error {
 	srv := &http.Server{
 		Addr:    getAddressFromHostAndPort(appConfig.Host, appConfig.Port),
 		Handler: router,
